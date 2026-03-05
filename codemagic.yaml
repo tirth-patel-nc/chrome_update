@@ -5,9 +5,17 @@ workflows:
     instance_type: windows_x2
 
     scripts:
+      - name: Stop Chrome
+        script: |
+          Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
+
       - name: Update Chrome
         script: |
           choco upgrade googlechrome -y --ignore-checksums
+
+      - name: Wait for installation
+        script: |
+          Start-Sleep -Seconds 10
 
       - name: Detect Chrome Version
         script: |
@@ -30,16 +38,9 @@ workflows:
           Write-Host "Chrome major version: $chromeMajor"
 
           $env:CHROME_MAJOR = $chromeMajor
-          $env:CHROME_VERSION = $chromeVersion
 
       - name: Install Matching ChromeDriver
         script: |
-          if (-not $env:CHROME_MAJOR) {
-            Write-Host "Chrome version not detected"
-            exit 1
-          }
-
-          Write-Host "Installing ChromeDriver for Chrome major version $env:CHROME_MAJOR"
           choco upgrade chromedriver --version=$env:CHROME_MAJOR -y
 
       - name: Verify Versions
