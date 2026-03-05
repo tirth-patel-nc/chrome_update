@@ -1,15 +1,16 @@
 workflows:
-    chrome-workflow:
-        name: Chrome Workflow
+    sample-workflow:
+        name: Sample Workflow
         max_build_duration: 120
         instance_type: windows_x2
-        
-        triggering:
-            events:                      
-                - push
 
         scripts:
             - name: Update Chrome
               script: | 
                 choco upgrade googlechrome -y --ignore-checksums
+            - name: Update Chrome Driver
+              script: | 
+                $CHROME_VERSION = (& "$env:ProgramFiles\Google\Chrome\Application\chrome.exe" --version).Split()[2]
+                $CHROME_MAJOR = $CHROME_VERSION.Split('.')[0]
+                choco install chromedriver --version=$CHROME_MAJOR -y
     
