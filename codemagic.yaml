@@ -9,21 +9,22 @@ workflows:
         script: |
           choco upgrade googlechrome -y --ignore-checksums
 
-      - name: Update Chrome Driver
+      - name: Install matching ChromeDriver
         script: |
-          $chromePath1 = "$env:ProgramFiles\Google\Chrome\Application\chrome.exe"
-          $chromePath2 = "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+          $chromePaths = @(
+            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+          )
 
-          if (Test-Path $chromePath1) {
-              $chromePath = $chromePath1
-          } elseif (Test-Path $chromePath2) {
-              $chromePath = $chromePath2
-          } else {
-              Write-Host "Chrome not found"
-              exit 1
+          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+          if (-not $chromePath) {
+            Write-Error "Chrome not found"
+            exit 1
           }
 
-          $CHROME_VERSION = (& $chromePath --version).Split()[2]
-          $CHROME_MAJOR = $CHROME_VERSION.Split('.')[0]
+          $versionOutput = & $chromePath --version
+          $chromeVersion = $versionOutput.Split(" ")[2]
+          $chromeMajor = $chromeVersion.Split(".")[0]
 
-          choco upgrade chromedriver --version=$CHROME_MAJOR -y
+          choco upgrade chromedriver --version=$chromeMajor -y
