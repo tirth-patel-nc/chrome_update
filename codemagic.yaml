@@ -1,30 +1,21 @@
-workflows:
-  sample-workflow:
-    name: Sample Workflow
-    max_build_duration: 120
-    instance_type: windows_x2
+- name: Install matching ChromeDriver
+  script: |
+    $chromePaths = @(
+      "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+      "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+    )
 
-    scripts:
-      - name: Update Chrome
-        script: |
-          choco upgrade googlechrome -y --ignore-checksums
+    $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-      - name: Install matching ChromeDriver
-        script: |
-          $chromePaths = @(
-            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
-          )
+    if (-not $chromePath) {
+      Write-Host "Chrome not found"
+      exit 1
+    }
 
-          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
+    $chromeMajor = $chromeVersion.Split('.')[0]
 
-          if (-not $chromePath) {
-            Write-Error "Chrome not found"
-            exit 1
-          }
+    Write-Host "Chrome version: $chromeVersion"
+    Write-Host "Chrome major: $chromeMajor"
 
-          $versionOutput = & $chromePath --version
-          $chromeVersion = $versionOutput.Split(" ")[2]
-          $chromeMajor = $chromeVersion.Split(".")[0]
-
-          choco upgrade chromedriver --version=$chromeMajor -y
+    choco upgrade chromedriver --version=$chromeMajor -y
