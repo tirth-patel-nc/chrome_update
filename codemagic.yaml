@@ -11,5 +11,5 @@ workflows:
         scripts:
             - name: Update Chrome
               script: | 
-                choco upgrade googlechrome -y
+                choco upgrade googlechrome -y --ignore-checksums
     
