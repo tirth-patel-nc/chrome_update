@@ -9,6 +9,6 @@ workflows:
         script: |
           choco upgrade googlechrome -y --ignore-checksums
 
-      - name: Install Matching ChromeDriver
+      - name: Update ChromeDriver
         script: |
-          choco upgrade chromedriver --version=146 -y
+          choco upgrade chromedriver -y --ignore-checksums
