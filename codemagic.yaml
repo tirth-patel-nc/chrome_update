@@ -4,54 +4,10 @@ workflows:
     max_build_duration: 120
     instance_type: windows_x2
 
-    scripts:
-      - name: Stop Chrome
-        script: |
-          Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
-
       - name: Update Chrome
         script: |
           choco upgrade googlechrome -y --ignore-checksums
 
-      - name: Wait for installation
-        script: |
-          Start-Sleep -Seconds 10
-
-      - name: Detect Chrome Version
-        script: |
-          $chromePaths = @(
-            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
-          )
-
-          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-          if (-not $chromePath) {
-            Write-Host "Chrome not found"
-            exit 1
-          }
-
-          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
-          $chromeMajor = $chromeVersion.Split('.')[0]
-
-          Write-Host "Chrome version: $chromeVersion"
-          Write-Host "Chrome major version: $chromeMajor"
-
-          $env:CHROME_MAJOR = $chromeMajor
-
       - name: Install Matching ChromeDriver
         script: |
-          choco upgrade chromedriver --version=$env:CHROME_MAJOR -y
-
-      - name: Verify Versions
-        script: |
-          $chromePaths = @(
-            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
-          )
-
-          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
-
-          Write-Host "Installed Chrome: $chromeVersion"
-          chromedriver --version
+          choco upgrade chromedriver --version=146 -y
