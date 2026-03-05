@@ -11,5 +11,5 @@ workflows:
         scripts:
             - name: Update Chrome
               script: | 
-                choco install googlechrome --version=146 -y
+                choco install googlechrome --version=146 --pre -y
     
