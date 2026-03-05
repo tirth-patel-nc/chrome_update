@@ -29,20 +29,18 @@ workflows:
           Write-Host "Chrome version: $chromeVersion"
           Write-Host "Chrome major version: $chromeMajor"
 
-          echo "CHROME_MAJOR=$chromeMajor" >> $env:GITHUB_ENV
+          $env:CHROME_MAJOR = $chromeMajor
+          $env:CHROME_VERSION = $chromeVersion
 
       - name: Install Matching ChromeDriver
         script: |
-          $chromePaths = @(
-            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
-          )
+          if (-not $env:CHROME_MAJOR) {
+            Write-Host "Chrome version not detected"
+            exit 1
+          }
 
-          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
-          $chromeMajor = $chromeVersion.Split('.')[0]
-
-          choco upgrade chromedriver --version=$chromeMajor -y
+          Write-Host "Installing ChromeDriver for Chrome major version $env:CHROME_MAJOR"
+          choco upgrade chromedriver --version=$env:CHROME_MAJOR -y
 
       - name: Verify Versions
         script: |
