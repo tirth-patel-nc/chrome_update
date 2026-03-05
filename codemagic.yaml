@@ -1,21 +1,58 @@
-- name: Install matching ChromeDriver
-  script: |
-    $chromePaths = @(
-      "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-      "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
-    )
+workflows:
+  chrome-workflow:
+    name: Chrome Workflow
+    max_build_duration: 120
+    instance_type: windows_x2
 
-    $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    scripts:
+      - name: Update Chrome
+        script: |
+          choco upgrade googlechrome -y --ignore-checksums
 
-    if (-not $chromePath) {
-      Write-Host "Chrome not found"
-      exit 1
-    }
+      - name: Detect Chrome Version
+        script: |
+          $chromePaths = @(
+            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+          )
 
-    $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
-    $chromeMajor = $chromeVersion.Split('.')[0]
+          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-    Write-Host "Chrome version: $chromeVersion"
-    Write-Host "Chrome major: $chromeMajor"
+          if (-not $chromePath) {
+            Write-Host "Chrome not found"
+            exit 1
+          }
 
-    choco upgrade chromedriver --version=$chromeMajor -y
+          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
+          $chromeMajor = $chromeVersion.Split('.')[0]
+
+          Write-Host "Chrome version: $chromeVersion"
+          Write-Host "Chrome major version: $chromeMajor"
+
+          echo "CHROME_MAJOR=$chromeMajor" >> $env:GITHUB_ENV
+
+      - name: Install Matching ChromeDriver
+        script: |
+          $chromePaths = @(
+            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+          )
+
+          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
+          $chromeMajor = $chromeVersion.Split('.')[0]
+
+          choco upgrade chromedriver --version=$chromeMajor -y
+
+      - name: Verify Versions
+        script: |
+          $chromePaths = @(
+            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+            "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+          )
+
+          $chromePath = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $chromeVersion = (Get-Item $chromePath).VersionInfo.ProductVersion
+
+          Write-Host "Installed Chrome: $chromeVersion"
+          chromedriver --version
