@@ -1,5 +1,5 @@
 workflows:
-    ios-workflow:
+    chrome-workflow:
         name: Chrome Workflow
         max_build_duration: 120
         instance_type: windows_x2
